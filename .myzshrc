@@ -1,0 +1,224 @@
+## ========= EXPORTS ========= ##
+export DOCKER_HOST=tcp://192.168.59.103:2376
+export DOCKER_CERT_PATH=/Users/max/.boot2docker/certs/boot2docker-vm
+export DOCKER_TLS_VERIFY=1
+## ======== !EXPORTS ======== ##
+
+
+
+## ========= WELCOME ========= ##
+# Welcome message : mac scan
+# screenfetch -t
+## ========= !WELCOME ========= ##
+
+
+
+## ========= GENERAL ========= ##
+# Reverse
+alias xs='cd'
+alias sl='ls'
+# Command shortcuts
+alias h='history'
+alias c='clear'
+alias m='make'
+alias aget='apt-get install -y'
+alias bget='brew install -y'
+alias search='sudo apt-cache search' 
+alias lt='tree'
+alias vi="vim"
+# Path shortcuts
+alias _desk='cd ~/Desktop/'
+alias _down='cd ~/Downloads/'
+alias _work='cd ~/Desktop/Maestro/Dev'
+alias _tt='cd ~/Desktop/Maestro/Dev/Ticket-tool'
+alias _up='cd ~/Desktop/Maestro/Dev/Upload-Service'
+alias _lb='cd ~/Desktop/Maestro/Dev/live-booker/'
+alias _om='cd ~/Desktop/Maestro/Dev/omega/'
+alias _kr='cd ~/Desktop/Maestro/Dev/kr0wl3r'
+alias _ops='cd ~/Desktop/Maestro/Dev/maestro-ops/'
+alias _machines='cd ~/Desktop/Maestro/Dev/maestro-machines/'
+alias _images='cd ~/Desktop/Maestro/Dev/maestro-base-docker-images/'
+
+# Utils
+alias checko='wget -O /dev/null http://download.thinkbroadband.com/1GB.zip'
+huhu() {
+	defaults write com.apple.screencapture location $1
+	killall SystemUIServer
+}
+## ========= !GENERAL ========= ##
+
+
+
+## ========= NPM ========= ##
+npmv() { npm show $1 version }
+## ========= !NPM ========= ##
+
+
+
+## ========= GIT ========= ##
+alias g='git'
+alias gs='git status'
+alias gsl='out_in "git stash list"'
+alias gpr='git pull --rebase'
+alias grrh='git reset --hard HEAD'
+alias gcdf='git clean -df'
+alias gcam='git commit --amend'
+alias gup='git stash && git pull --rebase && git stash pop'
+alias grs='git reset --soft HEAD~'
+ggo() { echo "Opening all files from $(pwd) in atom"; for editedFile in $(git status --porcelain | awk '{print $2}'); do atom $editedFile; done; echo "DONE !"}
+gri() { git rebase -i HEAD~$1; }
+# alias _old_grf='git co master && git fetch upstream && git rebase upstream/master && git co dev && git rebase upstream/dev'
+grf() {
+	_branch=$(git rev-parse --abbrev-ref HEAD)
+	git stash save "grf_stash_$(gshuf -i1-100 -n1)"
+	git co master
+	git fetch upstream
+	git rebase upstream/master
+	git co dev
+	git rebase upstream/dev
+	git co $_branch
+	git stash pop stash@\{0\}
+}
+gcpu() {
+	git add .
+	git commit -m "$1"
+	git push -u origin $(git rev-parse --abbrev-ref HEAD)
+}
+# gd() { $(git diff --color | diff-so-fancy) }
+## ========= !GIT ========= ##
+
+
+
+## ========= DOCKER ========= ##
+alias d='docker'
+alias dm='docker-machine'
+alias dc='docker-compose'
+alias dls='docker ps'
+alias dll='docker ps -a'
+alias ddev='eval "$(docker-machine env dev)"'
+alias dkd="docker run -d -P"
+alias dki="docker run -t -i -P"
+db() { docker build -t="$1" .; }
+drm() { docker rm $(docker ps -q -a); }
+dri() { docker rmi $(docker images -q --filter "dangling=true"); }
+dru() { docker rmi $(docker images | grep "^<none>" | awk "{print $3}"); }
+dgo() { docker exec -ti $@ bash }
+dlog() { docker logs -f $@ }
+dip() { docker inspect --format '{{ .NetworkSettings.IPAddress }}' "$@"; }
+## ========= !DOCKER ========= ##
+
+
+
+## ========= MONGO ========= ##
+alias sshMProd='_machines && ssh -i gce-prod-mongo-1/id_rsa docker-user@104.155.17.227 -L 1234:localhost:27017 -N'
+export PATH=$PATH":/Users/max/_Apps/mongo/bin/"
+## ========= !GIT ========= ##
+
+
+
+## ========= FUNCTIONS ========= ##
+# always $cmd $sleepDuration
+always_f() {
+	"while true; do "$1"; sleep $2; done"
+}
+alias always=always_f
+
+# grepcode $path $fileExtension $grepRegexp
+grepcode_f() {
+	echo 'find '$1' -name "*.'$2'" | xargs grep -Hn '$3
+	find $1 -name "*.$2" | xargs grep -Hn $3
+}
+alias grepcode=grepcode_f
+
+# Sexy date formating
+jdate_f() {
+  DATE=$1 node -e 'console.log(new Date(parseInt(process.env.DATE)))'
+}
+alias jdate=jdate_f
+
+# Show/hide dotfiles within finder
+dotfiles_f () {
+	if [ $1 = "y" ]; then
+		defaults write com.apple.finder AppleShowAllFiles YES
+	else
+		defaults write com.apple.finder AppleShowAllFiles NO
+	fi
+}
+alias dotfiles=dotfiles_f
+
+# Redirect command output to a file, cat it and remove it (ex: git stash)
+out_in_f() {
+	echo "> $1 -> $(pwd)"
+	eval "$1" >> ~/huhu_123.txt && cat ~/huhu_123.txt && rm ~/huhu_123.txt
+}
+alias out_in=out_in_f
+
+# Get colors in manual pages
+man_f() {
+    env \
+    LESS_TERMCAP_mb=$(printf "\e[1;31m") \
+    LESS_TERMCAP_md=$(printf "\e[1;31m") \
+    LESS_TERMCAP_me=$(printf "\e[0m") \
+    LESS_TERMCAP_se=$(printf "\e[0m") \
+    LESS_TERMCAP_so=$(printf "\e[1;44;33m") \
+    LESS_TERMCAP_ue=$(printf "\e[0m") \
+    LESS_TERMCAP_us=$(printf "\e[1;32m") \
+    man "$@"
+}
+alias man=man_f
+
+# Syntax highlighting in cat
+cat_f() {
+    local out colored
+    out=$(/bin/cat $@)
+    colored=$(echo $out | pygmentize -f console -g 2>/dev/null)
+    [[ -n $colored ]] && echo "$colored" || echo "$out"
+}
+alias cat=cat_f
+
+# One command to update all package manager
+update_pm_f() {
+    local brew="brew update; brew upgrade;"
+    local gem="gem update;"
+    local pip="pip freeze --local | grep -v '^\-e' | cut -d = -f 1  | xargs pip install -U -q"
+    sh -c $brew$gisty; sudo sh -c $gem$pip
+}
+alias update_pm=update_pm_f
+
+# Change directory to the current Finder directory
+cdf_f() {
+    target=`osascript -e 'tell application "Finder" to if (count of Finder windows) > 0 then get POSIX path of (target of front Finder window as text)'`
+    if [ "$target" != "" ]; then
+        cd "$target"; pwd
+    else
+        echo 'No Finder window found' >&2
+    fi
+}
+alias cdf=cdf_f
+
+# Turns seconds into human readable time : # 165392 => 1d 21h 56m 32s
+to_human_time() {
+	local tmp=$1
+	local days=$(( tmp / 60 / 60 / 24 ))
+	local hours=$(( tmp / 60 / 60 % 24 ))
+	local minutes=$(( tmp / 60 % 60 ))
+	local seconds=$(( tmp % 60 ))
+	(( $days > 0 )) && echo -n "${days}d "
+	(( $hours > 0 )) && echo -n "${hours}h "
+	(( $minutes > 0 )) && echo -n "${minutes}m "
+	echo "${seconds}s"
+}
+## ========= FUNCTIONS ========= ##
+
+
+
+## ========= INIT ========= ##
+# dm start dev | true
+# ddev
+# if [[ dm ls --filter name=dev | tail -1 | awk -F" " '{if ($1) print $1}' != "dev" ]]
+# then
+# 	echo "starting 'dev' machina"
+# 	dm start dev
+# fi
+# ddev
+## ========= !INIT ========= ##
